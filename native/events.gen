@@ -1,0 +1,53 @@
+enum EventType {
+    None
+    Quit
+    Key
+    Text
+    MouseMove
+    MouseDown
+    MouseUp
+    // can't be arsed tbh
+    //MouseScroll
+}
+
+enum MouseButton {
+    Left
+    Right
+    Middle
+    Unknown
+}
+
+enum Modifier {
+    Shift
+    Control
+    Alt
+    Caps
+}
+
+enum Key {
+    Return
+    Escape
+    Backspace
+    Delete
+    Tab
+
+    Insert
+    Home
+    End
+    PageUp
+    PageDown
+
+    ArrowRight
+    ArrowLeft
+    ArrowDown
+    ArrowUp
+
+    LControl
+    RControl
+    LShift
+    RShift
+    LAlt
+    RAlt
+
+    Unknown
+}

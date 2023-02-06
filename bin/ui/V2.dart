@@ -22,4 +22,7 @@ class V2 {
     populate(_x, _y);
     return V2(_x.value, _y.value);
   }
+
+  @override
+  String toString() => '($x, $y)';
 }
