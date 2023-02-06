@@ -90,13 +90,13 @@ def codegen(files: list[ParsedGenFile]) -> str:
             [],
             [
                 # exclude generated files so cloc actually shows real results
-                f"cloc . --exclude-list={get_config(ConfigField.cloc_exclude_list_path)}"
+                f"{get_config(ConfigField.cloc_path)} . --exclude-list={get_config(ConfigField.cloc_exclude_list_path)}"
             ]
         ) + generate_makefile_item(
             "cloc-by-file",
             [],
             [
-                f"cloc . --exclude-list={get_config(ConfigField.cloc_exclude_list_path)} --by-file"
+                f"{get_config(ConfigField.cloc_path)} . --exclude-list={get_config(ConfigField.cloc_exclude_list_path)} --by-file"
             ]
         )]) if get_config(ConfigField.use_cloc) else ""
     ) + out

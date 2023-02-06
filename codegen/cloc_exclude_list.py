@@ -10,7 +10,10 @@ def codegen() -> str:
         get_config(ConfigField.dart_output_path),
         get_config(ConfigField.c_output_path),
         "Makefile",
-        get_config(ConfigField.cloc_exclude_list_path)
+        get_config(ConfigField.cloc_exclude_list_path),
+        "pubspec.yaml",
+        "analysis_options.yaml",
+        "README.md"
     ])
 
     return out

@@ -11,6 +11,7 @@ class ConfigField(Enum):
     c_output_path = auto()
     use_cloc = auto()
     cloc_exclude_list_path = auto()
+    cloc_path = auto()
 
 DEFAULTS = {
     ConfigField.definition_ext: ".gen",
@@ -19,6 +20,7 @@ DEFAULTS = {
     ConfigField.c_output_path: "native/c_codegen.h",
     ConfigField.use_cloc: True,
     ConfigField.cloc_exclude_list_path: ".cloc_exclude_list.txt",
+    ConfigField.cloc_path: "cloc"
 }
 
 CONFIG_FNAME = 'codegen.yaml'

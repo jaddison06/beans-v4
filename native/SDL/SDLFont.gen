@@ -1,0 +1,17 @@
+@LinkWithLib(SDL2_ttf)
+
+@Show(Init)
+bool SFInit()
+@Show(Quit)
+void SFQuit()
+
+@Prefix(SF)
+class SDLFontRaw {
+    @Initializer()
+    void* SFCreate(char* family, int size)
+
+    @Invalidates()
+    void SFDestroy()
+
+    void SFGetTextSize(char* text, int* width, int* height)
+}
