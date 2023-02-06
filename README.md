@@ -1,2 +1,3 @@
-# beans-v4
-never gonna give you up
+# beans
+
+Open-source lighting control system focusing on flexibility and extensibility.
