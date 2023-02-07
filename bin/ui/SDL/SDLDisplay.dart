@@ -10,6 +10,16 @@ class SDLDisplay extends SDLDisplayRaw implements Display {
   }
 
   @override
+  void SetClip(V2 pos, V2 size) {
+    cSetClip(pos.x, pos.y, size.x, size.y);
+  }
+
+  @override
+  void Clear(Colour col) {
+    cClear(col.r, col.g, col.b, col.a);
+  }
+
+  @override
   V2 get dimensions {
     return V2.fromPointers((x, y) => GetSize(x, y));
   }

@@ -9,7 +9,7 @@ class Modifiers {
   Modifiers({required this.shift, required this.control, required this.alt, required this.caps});
 }
 
-abstract class Event {
+abstract class EventPoller {
   EventType get type;
   V2 get pos;
   Key get key;

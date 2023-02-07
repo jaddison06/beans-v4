@@ -21,6 +21,13 @@ class SDLDisplayRaw {
 
     void SDGetSize(int* width, int* height)
 
+    @Show(cClear)
+    void SDClear(int r, int g, int b, int a)
+    @Show(cSetClip)
+    void SDSetClip(int x, int y, int w, int h)
+
+    void SDResetClip()
+
     @Show(Paint)
     void SDFlush()
 

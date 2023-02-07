@@ -97,9 +97,15 @@ void SDGetSize(SDLDisplay* self, int* w, int* h) {
 
 void SDFlush(SDLDisplay* self) {
     SDL_RenderPresent(self->renderer);
-    SDSetColour(self, 0, 0, 0, 255);
+    // SDSetColour(self, 0, 0, 0, 255);
+    // SDL_RenderClear(self->renderer);
+}
+
+void SDClear(SDLDisplay* self, int r, int g, int b, int a) {
+    SDSetColour(self, r, g, b, a);
     SDL_RenderClear(self->renderer);
 }
+
 void SDDrawRect(SDLDisplay* self, int x, int y, int w, int h, int r, int g, int b, int a) {
     SDL_Rect rect = {x, y, w, h};
     SDSetColour(self, r, g, b, a);
