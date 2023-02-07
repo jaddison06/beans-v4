@@ -121,7 +121,8 @@ SUPPORTED_ANNOTATIONS: dict[str, dict[str, int]] = {
 
     },
     "file": {
-        "LinkWithLib": 1
+        "LinkWithLib": 1,
+        "PlatformLinkWithLib": 2
     }
 }
 

@@ -1,0 +1,25 @@
+@PlatformLinkWithLib(Windows, ws2_32)
+
+enum BeansE131ErrorCode {
+    success
+    socket       // e131_socket() failed
+    source_name  // Source name was too long
+    unicast_dest // e131_unicast_dest() failed
+}
+
+@Prefix(BeansE131)
+class E131 {
+    @Initializer()
+    void* BeansE131Init(char* source_name, char* dest, u16 universe)
+
+    // todo: free some memory at some point. probably.
+
+    @Getter(error)
+    BeansE131ErrorCode BeansE131GetError()
+
+    void BeansE131Print()
+
+    void BeansE131SetValue(u16 channel, u8 value)
+
+    bool BeansE131Send()
+}

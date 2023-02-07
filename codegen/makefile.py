@@ -2,6 +2,7 @@ from config import *
 from codegen_types import *
 import os.path as path
 from shared_library_extension import *
+from platform import system
 
 def generate_makefile_item(target: str, dependencies: list[str], commands: list[str]) -> str:
     out = f"{target}:"
@@ -27,6 +28,8 @@ def codegen(files: list[ParsedGenFile]) -> str:
         for annotation in file.annotations:
             if annotation.name == "LinkWithLib":
                 link_libs.append(annotation.args[0])
+            elif annotation.name == "PlatformLinkWithLib" and system() == annotation.args[0]:
+                link_libs.append(annotation.args[1])
 
         command = f"gcc -shared -o {lib_name} -fPIC -I. {file.name_no_ext()}.c"
         for lib in link_libs:
