@@ -10,7 +10,6 @@ void main(List<String> arguments) {
   final display = SDLDisplay('beans', true);
   final font = SDLFont('res/Menlo Regular.ttf', 20);
   final event = SDLEvent();
-  print('Successful init!');
   var quit = false;
   var pos = V2(0, 0);
   while (!quit) {
@@ -18,6 +17,10 @@ void main(List<String> arguments) {
       switch (event.type) {
         case EventType.Quit: quit = true; break;
         case EventType.MouseMove: pos = event.pos; break;
+        case EventType.Key: {
+          if (event.key == Key.Escape) quit = true;
+          break;
+        }
         default: {}
       }
     }

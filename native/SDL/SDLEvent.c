@@ -42,10 +42,6 @@ char* SEGetText(SDLEvent* self) {
     return self->text;
 }
 
-uint16_t SEGetModifiers(SDLEvent* self) {
-    return self->modifiers;
-}
-
 BOOL HasMod(SDLEvent* self, SDL_Keymod mod) {
     return self->modifiers & mod > 0;
 }

@@ -1,13 +1,21 @@
 import '../dart_codegen.dart';
 import 'V2.dart';
 
+class Modifiers {
+  final bool shift;
+  final bool control;
+  final bool alt;
+  final bool caps;
+  Modifiers({required this.shift, required this.control, required this.alt, required this.caps});
+}
+
 abstract class Event {
   EventType get type;
   V2 get pos;
   Key get key;
   String get text;
   MouseButton get mouseButton;
-  List<Modifier> get modifiers;
+  Modifiers get modifiers;
 
   int Poll();
   void Destroy();

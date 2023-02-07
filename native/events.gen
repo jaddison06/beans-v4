@@ -17,13 +17,6 @@ enum MouseButton {
     Unknown
 }
 
-enum Modifier {
-    Shift
-    Control
-    Alt
-    Caps
-}
-
 enum Key {
     Return
     Escape
