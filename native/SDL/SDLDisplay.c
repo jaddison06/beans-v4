@@ -69,7 +69,7 @@ void SDDestroy(SDLDisplay* self) {
 
 void SDSetClip(SDLDisplay* self, int x, int y, int w, int h) {
     SDL_Rect clip = {
-        x: y,
+        x: x,
         y: y,
         w: w,
         h: h
@@ -101,11 +101,6 @@ void SDFlush(SDLDisplay* self) {
     // SDL_RenderClear(self->renderer);
 }
 
-void SDClear(SDLDisplay* self, int r, int g, int b, int a) {
-    SDSetColour(self, r, g, b, a);
-    SDL_RenderClear(self->renderer);
-}
-
 void SDDrawRect(SDLDisplay* self, int x, int y, int w, int h, int r, int g, int b, int a) {
     SDL_Rect rect = {x, y, w, h};
     SDSetColour(self, r, g, b, a);
@@ -116,6 +111,15 @@ void SDFillRect(SDLDisplay* self, int x, int y, int w, int h, int r, int g, int 
     SDL_Rect rect = {x, y, w, h};
     SDSetColour(self, r, g, b, a);
     SDL_RenderFillRect(self->renderer, &rect);
+}
+
+// NEEDS TO TAKE INTO ACCOUNT CLIP RECT!!
+void SDClear(SDLDisplay* self, int r, int g, int b, int a) {
+    // SDSetColour(self, r, g, b, a);
+    // SDL_RenderClear(self->renderer);
+    int w, h;
+    SDGetSize(self, &w, &h);
+    SDDrawRect(self, 0, 0, w, h, r, g, b, a);
 }
 
 SDL_Texture* GetTextTexture(SDLDisplay* self, TTF_Font* font, char* text, int r, int g, int b, int a, int* width, int* height) {

@@ -1,12 +1,32 @@
+import '../V2.dart';
 import '../Window.dart';
 import '../Colour.dart';
 
 class ColourWindow extends Window {
-  Colour col = Colour(255, 0, 0, 255);
+  int i = 0;
+
+  final colours = [
+    Colour.red,
+    Colour.green,
+    Colour.blue,
+    Colour.cyan,
+    Colour.magenta,
+    Colour.yellow
+  ];
+
+  void nextI() {
+    i++;
+    if (i == colours.length) i = 0;
+  }
 
   @override
   void paint(PaintDetails ctx) {
     print('Painting ColourWindow!');
-    ctx.display.FillRect(ctx.pos, ctx.size, col);
+    ctx.display.FillRect(ctx.pos, ctx.size, colours[i]);
+  }
+  
+  @override
+  void onMouseDown(V2 pos) {
+    refreshWith(nextI);
   }
 }

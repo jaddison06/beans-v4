@@ -9,7 +9,10 @@ void main(List<String> arguments) {
 
   final manager = UIManager(ui);
 
-  manager.addWindow(ColourWindow(), V2(5, 5), V2(50, 100));
+  manager.addWindow(ColourWindow(), V2(0, 0), V2(50, 50));
+  manager.addWindow(ColourWindow(), V2(55, 0), V2(50, 50));
+  manager.addWindow(ColourWindow(), V2(0, 55), V2(50, 50));
+  manager.addWindow(ColourWindow(), V2(55, 55), V2(50, 50));
 
   manager.go();
   

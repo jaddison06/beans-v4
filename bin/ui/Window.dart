@@ -1,4 +1,3 @@
-import 'UIManager.dart';
 import 'Display.dart';
 import 'V2.dart';
 
@@ -22,6 +21,11 @@ abstract class Window {
     changeState();
     needsPaint = true;
   }
+
+  void onMouseDown(V2 pos) {}
+  void onMouseDrag(V2 offset) {}
+  void onMouseOver(V2 pos) {}
+  void onMouseUp(V2 pos) {}
 
   void paint(PaintDetails ctx);
 }

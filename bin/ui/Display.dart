@@ -9,6 +9,7 @@ abstract class Display {
 
   void SetClip(V2 pos, V2 size);
   void ResetClip();
+  // NEEDS TO TAKE INTO ACCOUNT CLIP RECT!!
   void Clear(Colour col);
 
   // DOESN'T CLEAR JUST UPDATES!!
