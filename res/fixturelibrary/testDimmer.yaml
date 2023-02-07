@@ -1,0 +1,7 @@
+params:
+  intensity:
+    intensity:
+      min: 0
+      max: 100
+      home: 0
+      dmx: 0
