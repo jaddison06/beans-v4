@@ -35,9 +35,18 @@ class Engine {
   void SendDmx() {
     for (var channel in channels) {
       for (var param in channel.info.allParams) {
-        dmx.unis[channel.universe]![channel.address + param.dmx] = (
-          255 * ((param.level - param.min) / (param.max - param.min))
-        ).toInt();
+        if (!param.is16Bit) {
+          dmx.unis[channel.universe]![channel.address + param.dmx] = (
+            255 * ((param.level - param.min) / (param.max - param.min))
+          ).toInt();
+        } else {
+          final level = (65535 * ((param.level - param.min) / (param.max - param.min))).toInt();
+          final coarse = level >> 8;
+          final fine = level & 0xFF;
+          final uni = dmx.unis[channel.universe]!;
+          uni[channel.address + param.dmx] = coarse;
+          uni[channel.address + param.dmx + 1] = fine;
+        }
       }
     }
     dmx.Send();

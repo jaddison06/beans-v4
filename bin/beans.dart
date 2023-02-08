@@ -24,7 +24,7 @@ void main(List<String> arguments) {
   // V2.destroy();
   
   final engine = Engine();
-  engine.channels[0].info.intensity[0].level = 50;
+  engine.channels[0].info.intensity[0].level = 515;
   while (true) {
     engine.SendDmx();
   }

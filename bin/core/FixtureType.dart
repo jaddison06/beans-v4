@@ -13,7 +13,7 @@ class FixtureType<T extends Param> {
 
   FixtureType({required this.intensity, required this.colour, required this.position, required this.gobo, required this.beam});
 
-  static FixtureType<T> _fromFile<T extends Param>(String fname, T Function(String, int, int, int, int) createParam) {
+  static FixtureType<T> _fromFile<T extends Param>(String fname, T Function(String, int, int, int, int, bool) createParam) {
     final contents = File(fname).readAsStringSync();
 
     final intensity = <T>[];
@@ -29,7 +29,8 @@ class FixtureType<T extends Param> {
           param.value['min']!,
           param.value['max']!,
           param.value['home']!,
-          param.value['dmx']!
+          param.value['dmx']!,
+          param.value['is16Bit'] ?? false
         ));
       }
     };
@@ -74,8 +75,8 @@ class FixtureType<T extends Param> {
     );
   }
 
-  static FixtureType<Param> fromFile(String fname) => _fromFile(fname, (name, min, max, home, dmx) => Param(name, min, max, home, dmx));
-  static FixtureType<LiveParam> liveFromFile(String fname) => _fromFile(fname, (name, min, max, home, dmx) => LiveParam(name, min, max, home, dmx));
+  static FixtureType<Param> fromFile(String fname) => _fromFile(fname, (name, min, max, home, dmx, is16Bit) => Param(name, min, max, home, dmx, is16Bit));
+  static FixtureType<LiveParam> liveFromFile(String fname) => _fromFile(fname, (name, min, max, home, dmx, is16Bit) => LiveParam(name, min, max, home, dmx, is16Bit));
 
   List<LiveParam> _paramGroupToLive(List<Param> group) => group.map((param) => LiveParam.fromBase(param)).toList();
 
