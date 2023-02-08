@@ -40,6 +40,7 @@ BeansE131* BeansE131Init(char* source_name, char* dest, uint16_t universe) {
   return out;
 }
 
+// todo: close sockfd?
 void BeansE131Destroy(BeansE131* self) {
     free(self);
 }

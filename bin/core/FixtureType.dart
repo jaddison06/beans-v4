@@ -9,6 +9,8 @@ class FixtureType<T extends Param> {
   final List<T> gobo;
   final List<T> beam;
 
+  List<T> get allParams => intensity + colour + position + gobo + beam;
+
   FixtureType({required this.intensity, required this.colour, required this.position, required this.gobo, required this.beam});
 
   static FixtureType<T> _fromFile<T extends Param>(String fname, T Function(String, int, int, int, int) createParam) {
@@ -20,7 +22,7 @@ class FixtureType<T extends Param> {
     final gobo = <T>[];
     final beam = <T>[];
 
-    final processAll = (void Function(T) addToList, Map<String, Map<String, int>> paramGroup) {
+    final processAll = (void Function(T) addToList, YamlMap paramGroup) {
       for (var param in paramGroup.entries) {
         addToList(createParam(
           param.key,
@@ -33,9 +35,9 @@ class FixtureType<T extends Param> {
     };
 
     try {
-      final doc = loadYaml(contents) as Map<String, Object>;
-      for (var paramGroup in (doc['params'] as Map<String, Map<String, Map<String, int>>>).entries) {
-        switch (paramGroup.key) {
+      final YamlMap doc = loadYaml(contents);
+      for (MapEntry paramGroup in doc['params'].entries) {
+        switch (paramGroup.key as String) {
           case 'intensity': {
             processAll((param) => intensity.add(param), paramGroup.value);
             break;
@@ -58,8 +60,8 @@ class FixtureType<T extends Param> {
           }
         }
       }
-    } catch (_) {
-      print('Failed to load fixture from $fname!');
+    } catch (e) {
+      print('Failed to load fixture from $fname: $e');
       exit(1);
     }
 

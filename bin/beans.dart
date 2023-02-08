@@ -6,6 +6,8 @@ import 'ui/windows/ColourWindow.dart';
 
 import 'dart_codegen.dart';
 
+import 'core/Engine.dart';
+
 void main(List<String> arguments) {
   // final ui = SDLUI('beans', true);
 
@@ -20,11 +22,10 @@ void main(List<String> arguments) {
   
   // ui.Destroy();
   // V2.destroy();
-
-  final e131 = E131('beans', '127.0.0.1', 1);
-  final universe = e131.GetUniverseStart();
-  universe[1] = 255;
+  
+  final engine = Engine();
+  engine.channels[0].info.intensity[0].level = 50;
   while (true) {
-    e131.Send();
+    engine.SendDmx();
   }
 }
