@@ -12,14 +12,15 @@ class E131 {
     @Initializer()
     void* BeansE131Init(char* source_name, char* dest, u16 universe)
 
-    // todo: free some memory at some point. probably.
+    @Invalidates()
+    void BeansE131Destroy()
 
     @Getter(error)
     BeansE131ErrorCode BeansE131GetError()
 
     void BeansE131Print()
 
-    void BeansE131SetValue(u16 channel, u8 value)
+    Universe* BeansE131GetUniverseStart()
 
     bool BeansE131Send()
 }

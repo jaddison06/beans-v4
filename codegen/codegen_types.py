@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Callable
 import os.path as path
 from annotations import *
+from typemappings import *
 
 @dataclass
 class CodegenType:
@@ -74,31 +75,54 @@ class CodegenClass:
     methods: list[CodegenFunction]
     annotations: list[CodegenAnnotation]
 
-    def has_initializer_annotation(self, method: CodegenFunction) -> bool:
-        for annotation in method.annotations:
-            if annotation.name == "Initializer":
-                return True
-        return False
+    def validate(self) -> Optional[list[str]]:
+        out: list[str] = []
 
-    def validate(self) -> Optional[str]:
         initializer: Optional[CodegenFunction] = None
         for method in self.methods:
-            if self.has_initializer_annotation(method):
+            if has_annotation(method.annotations, "Initializer"):
                 initializer = method
                 break
         
         if initializer is None:
-            return f"The class {self.name} must have a method annotated as @Initializer."
+            out.append(f"The class {self.name} must have a method annotated as @Initializer.")
+        else:
+            if not (
+                initializer.return_type.typename == "void" and
+                initializer.return_type.is_pointer):
+                out.append(f"The initializer for the class {self.name} must have a return type of void* .")
         
-        if not (
-            initializer.return_type.typename == "void" and
-            initializer.return_type.is_pointer):
-            return f"The initializer for the class {self.name} must have a return type of void* ."
+        is_standalone_int: Callable[[CodegenType], bool]
+        is_standalone_int = lambda param: is_int_type(param.typename) and not param.is_pointer
+
+        for method in self.methods:
+            if has_annotation(method.annotations, "SubscriptGet"):
+                if not (
+                    len(method.params) == 2 and
+                    is_standalone_int(list(method.params.values())[1])
+                ):
+                    out.append(f'The SubscriptGet method for the class {self.name} must have a single integer argument.')
+                
+            elif has_annotation(method.annotations, "SubscriptSet"):
+                if not (
+                    len(method.params) == 3 and
+                    is_standalone_int(list(method.params.values())[1]) and
+                    method.return_type.typename == 'void' and
+                    not method.return_type.is_pointer
+                ):
+                    out.append(f'The SubscriptSet method for the class {self.name} must have two arguments, the first being an integer, and return void.')
+                
+            elif has_annotation(method.annotations, "Getter"):
+                param_count = len(method.params)
+                if param_count != 1: out.append(f"A getter cannot take any parameters, but {method.name} takes {param_count}")
+        
+        return out if out != [] else None
+
 
     
     def initializer(self) -> CodegenFunction:
         for method in self.methods:
-            if self.has_initializer_annotation(method):
+            if has_annotation(method.annotations, "Initializer"):
                 return method
         
         raise ValueError("CodegenClass.initializer() was called but no initializer method was found.")
@@ -115,7 +139,9 @@ SUPPORTED_ANNOTATIONS: dict[str, dict[str, int]] = {
         "Initializer": 0,
         "Getter": 1,
         "Show": 1,
-        "Invalidates": 0
+        "Invalidates": 0,
+        "SubscriptGet": 0,
+        "SubscriptSet": 0
     },
     "enum": {
 

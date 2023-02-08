@@ -1,0 +1,14 @@
+// Wrapper for a 1-indexed 512-long u8 array
+@Prefix(Universe)
+class Universe {
+    @Initializer()
+    void* UniverseInit()
+
+    @Invalidates()
+    void* UniverseDestroy()
+
+    @SubscriptGet()
+    u8 UniverseGet(u16 index)
+    @SubscriptSet()
+    void UniverseSet(u16 index, u8 level)
+}

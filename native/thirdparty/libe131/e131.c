@@ -352,12 +352,16 @@ BeansE131* BeansE131Init(char* source_name, char* dest, uint16_t universe) {
   return out;
 }
 
+void BeansE131Destroy(BeansE131* self) {
+    free(self);
+}
+
 void BeansE131Print(BeansE131* self) {
   e131_pkt_dump(stdout, &self->packet);
 }
 
-void BeansE131SetValue(BeansE131* self, uint16_t channel, uint8_t level) {
-  self->packet.dmp.prop_val[channel] = level;
+uint8_t* BeansE131GetUniverseStart(BeansE131* self) {
+    return &self->packet.dmp.prop_val[1];
 }
 
 BOOL BeansE131Send(BeansE131* self) {

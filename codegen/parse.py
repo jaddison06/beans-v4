@@ -296,8 +296,8 @@ class Parser:
                 current_annotations = []
         
         # all that bollocks
-        err_msg = out.validate()
-        if err_msg is not None:
-            self.error(err_msg)
+        errors = out.validate()
+        if errors is not None:
+            self.error('\n'.join(errors))
 
         return out

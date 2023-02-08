@@ -5,38 +5,7 @@ import os.path as path
 from shared_library_extension import *
 from typing import Callable
 from annotations import *
-
-NATIVE: dict[str, str] = {
-    "void": "Void",
-    "char": "Utf8",
-    "int": "Int32",
-    "double": "Double",
-    "bool": "Int32",
-    'i8': 'Int8',
-    'i16': 'Int16',
-    'i32': 'Int32',
-    'i64': 'Int64',
-    'u8': 'Uint8',
-    'u16': 'Uint16',
-    'u32': 'Uint32',
-    'u64': 'Uint64'
-}
-
-DART: dict[str, str] = {
-    "void": "void",
-    "char": "Utf8",
-    "int": "int",
-    "double": "double",
-    "bool": "int",
-    'i8': 'int',
-    'i16': 'int',
-    'i32': 'int',
-    'i64': 'int',
-    'u8': 'int',
-    'u16': 'int',
-    'u32': 'int',
-    'u64': 'int'
-}
+from typemappings import *
 
 # omg globals! what the hell jaddison! you're a terrible programmer and i hope you eat shit!
 lookup: TypeLookup
@@ -342,11 +311,21 @@ def classes(file: ParsedGenFile) -> str:
                 getter = get_annotation(method.annotations, "Getter")
                 if has_annotation(method.annotations, "Show"):
                     print(f"Warning: Annotation {get_annotation(method.annotations, 'Show')} on {class_.name}.{method.name} will have no effect, because the method also has the annotation {getter}.")
-                param_count = len(method.params)
-                assert param_count == 0, f"A getter cannot take any parameters, but {method.name} takes {param_count}"
                 out += f"    {func_class_func_return_type(method)} get "
                 out += getter.args[0]
                 out += " {\n"
+            
+            elif has_annotation(method.annotations, "SubscriptGet"):
+                if has_annotation(method.annotations, "Show"):
+                    print(f"Warning: Annotation {get_annotation(method.annotations, 'Show')} on {class_.name}.{method.name} will have no effect, because the method also has the annotation @SubscriptGet().")
+                out += f"    {func_class_func_return_type(method)} operator[]("
+                out += param_list(method);
+
+            elif has_annotation(method.annotations, "SubscriptSet"):
+                if has_annotation(method.annotations, "Show"):
+                    print(f"Warning: Annotation {get_annotation(method.annotations, 'Show')} on {class_.name}.{method.name} will have no effect, because the method also has the annotation @SubscriptSet().")
+                out += f"    {func_class_func_return_type(method)} operator[]=("
+                out += param_list(method);
 
             else:
                 if has_annotation(method.annotations, "Invalidates"):
