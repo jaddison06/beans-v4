@@ -23,6 +23,8 @@ void main(List<String> arguments) {
   // ui.Destroy();
   // V2.destroy();
   
+  libhelloWorld().helloWorld();
+
   final engine = Engine();
   engine.channels[0].info.intensity[0].level = 515;
   while (true) {

@@ -17,9 +17,19 @@ class Parser:
         contents: list[str]
         with open(self.fname, "rt") as fh:
             contents = fh.readlines()
-        
+
+        # file extension represents language as a string - should correspond to a SourceLang value        
+        base = path.splitext(self.fname)[0]
+        if path.exists(f'{base}.c'):
+            lang = SourceLang.c
+        elif path.exists(f'{base}.zig'):
+            lang = SourceLang.zig
+        else:
+            lang = SourceLang.unknown
+
         out = ParsedGenFile(
             self.fname,
+            lang,
             [], [], [], []
         )
 

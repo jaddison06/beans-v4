@@ -3,6 +3,7 @@ from typing import Optional, Callable
 import os.path as path
 from annotations import *
 from typemappings import *
+from enum import Enum, auto
 
 @dataclass
 class CodegenType:
@@ -152,10 +153,17 @@ SUPPORTED_ANNOTATIONS: dict[str, dict[str, int]] = {
     }
 }
 
+class SourceLang(Enum):
+    unknown = auto()
+    c = auto()
+    zig = auto()
+
 @dataclass
 class ParsedGenFile:
     # eg native/some_subdir/something.gen
     name: str
+
+    lang: SourceLang
 
     functions: list[CodegenFunction]
     enums: list[CodegenEnum]

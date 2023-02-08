@@ -15,6 +15,10 @@ def fs_util(*args: str):
         case 'mkdir':
             if not path.exists(args[1]):
                 os.makedirs(args[1])
+        case 'mv_file':
+            if path.exists(args[2]):
+                os.remove(args[2])
+            os.rename(args[1], args[2])
         case _: pass
 
 def main():

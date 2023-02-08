@@ -19,6 +19,8 @@ def codegen(files: list[ParsedGenFile]) -> str:
     libs: list[str] = []
     for file in files:
         if not file.has_code(): continue
+        # if there's definitions in there then we should probably be able to find the source
+        assert file.lang != SourceLang.unknown
 
         lib_path = f"build{path.sep}{file.libpath_no_ext()}"
         lib_name = f"{lib_path}{shared_library_extension()}"
@@ -31,22 +33,39 @@ def codegen(files: list[ParsedGenFile]) -> str:
             elif annotation.name == "PlatformLinkWithLib" and system() == annotation.args[0]:
                 link_libs.append(annotation.args[1])
 
-        command = f"gcc -shared -o {lib_name} -fPIC -I. {file.name_no_ext()}.c"
-        for lib in link_libs:
-            command += f" -l{lib}"
-
-        # todo: #included dependencies
-        out += generate_makefile_item(
-            lib_name,
-            [
-                f"{file.name_no_ext()}.c"
-            ],
-            [
-                fs_util(f"mkdir {path.dirname(lib_name)}"),
-                command
-            ]
-        )
-
+        match file.lang:
+            case SourceLang.c:
+                command = f"gcc -shared -o {lib_name} -fPIC -I. {file.name_no_ext()}.c"
+                for lib in link_libs:
+                    command += f" -l{lib}"
+                # todo: #included dependencies
+                out += generate_makefile_item(
+                    lib_name,
+                    [
+                        f"{file.name_no_ext()}.c"
+                    ],
+                    [
+                        fs_util(f"mkdir {path.dirname(lib_name)}"),
+                        command
+                    ]
+                )
+            case SourceLang.zig:
+                out += generate_makefile_item(
+                    lib_name,
+                    [
+                    f'{file.name_no_ext()}.zig'
+                    ],
+                    [
+                        fs_util(f"mkdir {path.dirname(lib_name)}"),
+                        f'zig build-lib -dynamic {file.name_no_ext()}.zig',
+                        # todo: linux!!
+                        fs_util(f'rm_file {path.basename(file.name_no_ext())}.dll.obj'),
+                        fs_util(f'rm_file {path.basename(file.name_no_ext())}.lib'),
+                        fs_util(f'rm_file {path.basename(file.name_no_ext())}.pdb'),
+                        fs_util(f'mv_file {path.basename(file.name_no_ext())}.dll {lib_name}')
+                    ]
+                )
+        
         libs.append(lib_name)
     
     
