@@ -13,7 +13,8 @@ def codegen() -> str:
         get_config(ConfigField.cloc_exclude_list_path),
         "pubspec.yaml",
         "analysis_options.yaml",
-        "README.md"
+        "README.md",
+        "native/thirdparty/"
     ])
 
     return out
