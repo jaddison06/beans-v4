@@ -1,0 +1,4 @@
+Genfile
+    filter call_regexp_common C++
+    extension gen
+    3rd_gen_scale 1
