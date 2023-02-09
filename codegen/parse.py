@@ -25,6 +25,9 @@ class Parser:
         elif path.exists(f'{base}.zig'):
             lang = SourceLang.zig
         else:
+            # this is ok! sometimes a .gen file _won't_ be associated with a source file - it might just contain
+            # enums or something. it's a build time issue if the source doesn't exist so this case is handled at
+            # the makefile generation stage :)
             lang = SourceLang.unknown
 
         out = ParsedGenFile(
