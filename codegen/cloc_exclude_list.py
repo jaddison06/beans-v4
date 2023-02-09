@@ -14,7 +14,8 @@ def codegen() -> str:
         "pubspec.yaml",
         "analysis_options.yaml",
         "README.md",
-        "native/thirdparty/"
+        "native/thirdparty/",
+        get_config(ConfigField.objects_output_path)
     ])
 
     return out

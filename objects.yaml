@@ -1,0 +1,7 @@
+Universe:
+  serializableInfo:
+    interface: Interface@../dmx/Interface.dart
+    mappedToUni: int
+  methods:
+    mapTo:
+      physicalUni: int

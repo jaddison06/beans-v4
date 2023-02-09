@@ -102,7 +102,8 @@ def codegen(files: list[ParsedGenFile]) -> str:
             fs_util("rm_dir build"),
             fs_util(f"rm_file {get_config(ConfigField.c_output_path)}"),
             fs_util(f"rm_file {get_config(ConfigField.dart_output_path)}"),
-            fs_util(f"rm_file {get_config(ConfigField.cloc_exclude_list_path)}")
+            fs_util(f"rm_file {get_config(ConfigField.cloc_exclude_list_path)}"),
+            fs_util(f'rm_file {get_config(ConfigField.objects_output_path)}')
         ]
     ) + (
         ''.join([generate_makefile_item(

@@ -1,10 +1,7 @@
 import '../dart_codegen.dart';
 
+import 'Interface.dart';
 import 'SacnInterface.dart';
-
-enum Interface {
-  Sacn
-}
 
 class UniverseData {
   Interface interface;

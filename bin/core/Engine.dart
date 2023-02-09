@@ -1,5 +1,6 @@
 import 'Channel.dart';
 import '../dmx/DmxManager.dart';
+import '../dmx/Interface.dart';
 import 'FixtureType.dart';
 
 class Engine {

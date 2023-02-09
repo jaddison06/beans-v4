@@ -12,6 +12,8 @@ class ConfigField(Enum):
     use_cloc = auto()
     cloc_exclude_list_path = auto()
     cloc_path = auto()
+    objects_def_path = auto()
+    objects_output_path = auto()
 
 DEFAULTS = {
     ConfigField.definition_ext: ".gen",
@@ -20,7 +22,9 @@ DEFAULTS = {
     ConfigField.c_output_path: "native/c_codegen.h",
     ConfigField.use_cloc: True,
     ConfigField.cloc_exclude_list_path: ".cloc_exclude_list.txt",
-    ConfigField.cloc_path: "cloc"
+    ConfigField.cloc_path: "cloc",
+    ConfigField.objects_def_path: 'objects.yaml',
+    ConfigField.objects_output_path: 'bin/objects/generated.dart'
 }
 
 CONFIG_FNAME = 'codegen.yaml'

@@ -9,6 +9,13 @@ import dart
 import c
 import makefile
 import cloc_exclude_list
+import objects
+
+# WHEN ADDING A NEW BIT OF CODEGEN:
+#  - Add to config
+#  - Add to make clean
+#  - Exclude from cloc
+#  - Add to gitignore
 
 def all_with_extension(directory: str, ext: str) -> list[str]:
     if not ext.startswith('.'): ext = f'.{ext}'
@@ -31,12 +38,14 @@ def main():
             Parser(gen_file).parse()
         )
     
-    with open(get_config(ConfigField.dart_output_path), "wt") as fh:
+    with open(get_config(ConfigField.dart_output_path),    "wt") as fh:
         fh.write(dart    .codegen(parsed_files))
-    with open(get_config(ConfigField.c_output_path),    "wt") as fh:
+    with open(get_config(ConfigField.c_output_path),       "wt") as fh:
         fh.write(c       .codegen(parsed_files))
-    with open("Makefile",                               "wt") as fh:
+    with open("Makefile",                                  "wt") as fh:
         fh.write(makefile.codegen(parsed_files))
+    with open(get_config(ConfigField.objects_output_path), "wt") as fh:
+        fh.write(objects .codegen())
     
     if (get_config(ConfigField.use_cloc) == "True"):
         with open(get_config(ConfigField.cloc_exclude_list_path), "wt") as fh:
