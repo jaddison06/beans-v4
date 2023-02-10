@@ -10,3 +10,5 @@ objects:
 procedures:
   delete:
     key: Delete
+  dummy:
+    text: d

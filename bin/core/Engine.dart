@@ -2,6 +2,8 @@ import 'Channel.dart';
 import '../dmx/DmxManager.dart';
 import '../dmx/Interface.dart';
 import 'FixtureType.dart';
+import '../objects.dart';
+import 'ObjectManager.dart';
 
 class Engine {
   List<UniverseData> outputConfig() => [UniverseData(

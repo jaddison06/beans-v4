@@ -3,24 +3,24 @@ import '../dart_codegen.dart';
 import '../objects.dart';
 import 'Engine.dart';
 
-enum CommandLineTokenType {
+enum BCLTokenType {
   Key,
   Text
 }
 
-class CommandLineToken {
-  CommandLineTokenType type;
+class BCLToken {
+  BCLTokenType type;
   Key? key;
   String? text;
   Modifiers modifiers;
-  CommandLineToken(this.type, this.key, this.text, this.modifiers);
+  BCLToken(this.type, this.key, this.text, this.modifiers);
 }
 
-class CommandLine with CommandLineBase {
+class BeansCommandLine with CommandLineBase {
   final Engine engine;
-  CommandLine(this.engine);
+  BeansCommandLine(this.engine);
 
-  List<CommandLineToken> current = [];
+  List<BCLToken> current = [];
 
   void processEvent(EventPoller event) {
     switch (event.type) {
@@ -35,12 +35,12 @@ class CommandLine with CommandLineBase {
             break;
           }
           case Key.Return: {
-            execute();
+            // execute();
             break;
           }
           default: {
-            current.add(CommandLineToken(
-              CommandLineTokenType.Key,
+            current.add(BCLToken(
+              BCLTokenType.Key,
               event.key,
               null,
               event.modifiers
@@ -51,8 +51,8 @@ class CommandLine with CommandLineBase {
         break;
       }
       case EventType.Text: {
-        current.add(CommandLineToken(
-          CommandLineTokenType.Text,
+        current.add(BCLToken(
+          BCLTokenType.Text,
           null,
           event.text,
           event.modifiers

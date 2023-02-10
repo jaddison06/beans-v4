@@ -1,6 +1,7 @@
 import yaml
 from config import *
 from dataclasses import dataclass
+from enum import Enum, auto
 from banner import *
 
 @dataclass
@@ -11,11 +12,22 @@ class BeansObjectDef:
     ctrl: bool
     alt: bool
 
+
+class BCLTokenType(Enum):
+    text = auto()
+    key = auto()
+
+@dataclass
+class BeansProcedure:
+    tokenType: BCLTokenType
+    token: str
+
 def codegen() -> str:
     with open(get_config(ConfigField.objects_def_path), 'rt') as fh:
         contents = yaml.safe_load(fh)
-    imports: list[str] = ['core/Engine.dart', 'ui/EventPoller.dart', 'dart_codegen.dart', 'core/CommandLine.dart', 'core/BeansObject.dart']
+    imports: list[str] = ['core/Engine.dart', 'ui/EventPoller.dart', 'dart_codegen.dart', 'core/BeansCommandLine.dart', 'core/BeansObject.dart']
     objects: dict[str, BeansObjectDef] = {}
+    procedures: dict[str, BeansProcedure] = {}
 
     for objectName, object in contents['objects'].items():
         serializableInfo: dict[str, str] = object['serializableInfo']
@@ -35,6 +47,13 @@ def codegen() -> str:
 
         objects[objectName] = BeansObjectDef(serializableInfo, object['methods'], object['key'], ctrl, alt)
 
+    for procName, proc in contents['procedures'].items():
+        if 'key' in proc:
+            procedures[procName] = BeansProcedure(BCLTokenType.key, proc['key'])
+        elif 'text' in proc:
+            procedures[procName] = BeansProcedure(BCLTokenType.text, proc['text'])
+        else:
+            raise ValueError("Need 'key' or 'text' in procedure!")
 
     out = banner('generated file - do not edit!')
     for import_ in imports:
@@ -81,10 +100,28 @@ def codegen() -> str:
     
     out += \
 '''mixin CommandLineBase {
-    bool isProc(List<CommandLineToken> current) {
-        
-    }
-}
+    bool isProc(BCLToken current) {
+        if (current.type == BCLTokenType.Key && (
 '''
+    for procName, proc in procedures.items():
+        if proc.tokenType == BCLTokenType.key:
+            out += f'            current.key == Key.{proc.token} ||\n'
+    out = out[:-4]
+    out += '\n        )) { return true; }\n\n'
+
+    out += '        else if (current.type == BCLTokenType.Text && (\n'
+    for procName, proc in procedures.items():
+        if proc.tokenType == BCLTokenType.text:
+            out += f"            current.text == '{proc.token}' ||\n"
+    out = out[:-4]
+    out += '\n        )) { return true; }\n\n'
+
+    out += '        return false;\n'
+
+    out += '    }\n'
+
+
+    out += '}'
+
 
     return out
