@@ -24,14 +24,14 @@ DEFAULTS = {
     ConfigField.cloc_exclude_list_path: ".cloc_exclude_list.txt",
     ConfigField.cloc_path: "cloc",
     ConfigField.objects_def_path: 'objects.yaml',
-    ConfigField.objects_output_path: 'bin/objects/generated.dart'
+    ConfigField.objects_output_path: 'bin/objects.dart'
 }
 
 CONFIG_FNAME = 'codegen.yaml'
 
 def panic(msg: str):
     print(colored(f'CONFIG ERROR: {msg}'), 'red')
-    sys.exit()
+    return sys.exit()
 
 def get_config(key: ConfigField) -> str:
     if path.exists(CONFIG_FNAME):

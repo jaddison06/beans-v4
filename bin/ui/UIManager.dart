@@ -66,6 +66,8 @@ class UIManager {
           break;
         }
         case EventType.Quit: _quit = true; break;
+        case EventType.Key: print(_ui.event.key); break;
+        case EventType.Text: print('"${_ui.event.text}"'); break;
         default: {}
       }
     }

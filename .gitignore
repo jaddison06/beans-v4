@@ -10,4 +10,4 @@ Makefile
 native/c_codegen.h
 bin/dart_codegen.dart
 .cloc_exclude_list.txt
-bin/objects/generated.dart
+bin/objects.dart
