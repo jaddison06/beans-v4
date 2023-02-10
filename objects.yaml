@@ -1,6 +1,6 @@
 objects:
   Universe:
-    key: u
+    text: u
     serializableInfo:
       interface: Interface@dmx/Interface.dart
       mappedToUni: int

@@ -8,7 +8,7 @@ from banner import *
 class BeansObjectDef:
     serializableInfo: dict[str, str]
     methods: dict[str, dict[str, str]]
-    key: str
+    text: str
     ctrl: bool
     alt: bool
 
@@ -45,7 +45,7 @@ def codegen() -> str:
         else:
             ctrl = alt = False
 
-        objects[objectName] = BeansObjectDef(serializableInfo, object['methods'], object['key'], ctrl, alt)
+        objects[objectName] = BeansObjectDef(serializableInfo, object['methods'], object['text'], ctrl, alt)
 
     for procName, proc in contents['procedures'].items():
         if 'key' in proc:
@@ -118,7 +118,16 @@ def codegen() -> str:
 
     out += '        return false;\n'
 
-    out += '    }\n'
+    out += '    }\n\n'
+
+    out += '    bool isObject(BCLToken current) {\n'
+    # currently operating under the assumption that all objects are text (!)
+    out += '        if (current.type == BCLTokenType.Text && (\n'
+    for objectName, object in objects.items():
+        out += f"            (current.text == '{object.text}' && current.modifiers.control == {str(object.ctrl).lower()} && current.modifiers.alt == {str(object.alt).lower()}) ||\n"
+    out = out[:-4]
+    out += '\n        )) { return true; }\n\n'
+    out += '        return false;\n    }\n'
 
 
     out += '}'

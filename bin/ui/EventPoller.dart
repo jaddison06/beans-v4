@@ -7,6 +7,8 @@ class Modifiers {
   final bool alt;
   final bool caps;
   Modifiers({required this.shift, required this.control, required this.alt, required this.caps});
+
+  static Modifiers none() => Modifiers(shift: false, control: false, alt: false, caps: false);
 }
 
 abstract class EventPoller {
