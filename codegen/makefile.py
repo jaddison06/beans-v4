@@ -50,6 +50,21 @@ def codegen(files: list[ParsedGenFile]) -> str:
                     ]
                 )
             case SourceLang.zig:
+                match system():
+                    case 'Windows':
+                        zig_lib_name = f'{path.basename(file.name_no_ext())}.dll'
+                        rm_files = [
+                            f'{path.basename(file.name_no_ext())}.dll.obj',
+                            f'{path.basename(file.name_no_ext())}.lib',
+                            f'{path.basename(file.name_no_ext())}.pdb'
+                        ]
+                    case 'Linux':
+                        zig_lib_name = f'{file.libname()}.so'
+                        rm_files = [
+                            f'{file.libname()}.so.o'
+                        ]
+                    case _: raise OSError('Unsupported Zig platform!')
+
                 out += generate_makefile_item(
                     lib_name,
                     [
@@ -57,13 +72,10 @@ def codegen(files: list[ParsedGenFile]) -> str:
                     ],
                     [
                         fs_util(f"mkdir {path.dirname(lib_name)}"),
-                        f'zig build-lib -dynamic {file.name_no_ext()}.zig',
-                        # todo: linux!!
-                        fs_util(f'rm_file {path.basename(file.name_no_ext())}.dll.obj'),
-                        fs_util(f'rm_file {path.basename(file.name_no_ext())}.lib'),
-                        fs_util(f'rm_file {path.basename(file.name_no_ext())}.pdb'),
-                        fs_util(f'mv_file {path.basename(file.name_no_ext())}.dll {lib_name}')
-                    ]
+                        f'zig build-lib -dynamic {file.name_no_ext()}.zig'
+                    ] +
+                    list(map(lambda file: fs_util(f'rm_file {file}'), rm_files)) +
+                    [fs_util(f'mv_file {zig_lib_name} {lib_name}')]
                 )
         
         libs.append(lib_name)
