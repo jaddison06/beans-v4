@@ -16,16 +16,37 @@ class BCLToken {
   BCLToken(this.type, this.key, this.text, this.modifiers);
 }
 
-enum _SelectorState {
-  RangeStart,
-  RangeEnd
+// range ::= num ('thru' num)
+// selector ::= range ('+' | '-' range)*
+
+// Either a range of values or just a single value
+class Range {
+  int start;
+  int? end;
+  RangeOperator? operator;
+  Range(this.start, this.end, [this.operator]);
 }
 
+enum RangeOperator {
+  Plus,
+  Minus
+}
+
+typedef Selector = List<Range>;
+
+/// - Start - haven't parsed anything yet
+/// - ProcDetected - found a procedure name, need either object type or selector (implicit object)
+/// - Sel_ShouldBeRangeStart - we **should** be parsing the **start** value of a range
+/// - Sel_RangeStart - we're parsing the **start** value of a range
+/// - Sel_ShouldBeRangeEnd - we **should** be parsing the **end** value of a range
+/// - Sel_RangeEnd - we're parsing the **end** value of a range
 enum _ParserState {
   Start,
   ProcDetected,
-  ObjectDetected,
-  ImplicitObject
+  Sel_ShouldBeRangeStart,
+  Sel_RangeStart,
+  Sel_ShouldBeRangeEnd,
+  Sel_RangeEnd
 }
 
 class BCLParseError implements Exception {
@@ -85,53 +106,6 @@ class BeansCommandLine with CommandLineBase {
   bool isRangeModifier(BCLToken tok) => tok.type == BCLTokenType.Text && const ['t'].contains(tok.text);
   bool isRangeOperator(BCLToken tok) => tok.type == BCLTokenType.Text && const ['=', '-'].contains(tok.text);
 
-  // range ::= num ('thru' num)
-  // selector ::= range ('+' | '-' range)*
-  //
-  // todo: actually CHECK the object managers for existence
-  int selector(int start) {
-    if (!isNum(current[start])) return 0;
-    var end = start;
-    var state = _SelectorState.RangeStart;
-    outer: while (end < current.length) {
-      switch (state) {
-        case _SelectorState.RangeStart: {
-          if (isRangeModifier(current[end])) {
-            end++;
-            if (!isNum(current[end])) {
-              throw BCLParseError('Expected an ID');
-            }
-            state = _SelectorState.RangeEnd;
-          } else if (isRangeOperator(current[end])) {
-            end++;
-          } else if (isNum(current[end])) {
-            end++;
-          } else {
-            break outer;
-          }
-          break;
-        }
-        case _SelectorState.RangeEnd: {
-          if (isRangeOperator(current[end])) {
-            end++;
-            if (!isNum(current[end])) {
-              throw BCLParseError('Expected an ID');
-            }
-            state = _SelectorState.RangeStart;
-          } else if (isNum(current[end])) {
-            end++;
-          } else if (isRangeModifier(current[end])) {
-            throw BCLParseError('Expected a new range');
-          } else {
-            break outer;
-          }
-        }
-      }      
-    }
-
-    return end - start;
-  }
-
   // todo: temporary implementation
   BCLToken defaultObjectType() => BCLToken(
     BCLTokenType.Text,
@@ -149,34 +123,62 @@ class BeansCommandLine with CommandLineBase {
           if (isProc(token)) {
             state = _ParserState.ProcDetected;
           } else if (isObject(token)) {
-            state = _ParserState.ObjectDetected;
+            state = _ParserState.Sel_ShouldBeRangeStart;
           } else if (isNum(token)) {
-            // implicit object selection
+            // implicit object selection - insert the object & reverse
             current.insert(0, defaultObjectType());
-            state = _ParserState.ImplicitObject;
+            i--;
+            state = _ParserState.Sel_ShouldBeRangeStart;
           } else {
             // todo: more helpful error message - can't have 'XXX' here - needs toString() from codegen
             // which in turn needs disallowing of unknown events in the first place
-            throw BCLParseError('Expected procedure or selector');
+            throw BCLParseError('Expected a procedure or selector');
           }
           break;
         }
-        case _ParserState.ObjectDetected: {
-
+        case _ParserState.ProcDetected: {
+          // same object selection logic as detecting an object in _ParserState.Start
+          if (isNum(token)) {
+            current.insert(1, defaultObjectType());
+            i--;
+          } else if (isObject(token)) {
+            state = _ParserState.Sel_ShouldBeRangeStart;
+          } else {
+            throw BCLParseError('Expected an object or selector');
+          }
+          break;
+        }
+        // todo: actually CHECK the object managers for existence
+        case _ParserState.Sel_ShouldBeRangeStart: {
+          if (!isNum(token)) throw BCLParseError('Expected a selector');
+          state = _ParserState.Sel_RangeStart;
+          break;
+        }
+        case _ParserState.Sel_RangeStart: {
+          if (isRangeModifier(token)) {
+            state = _ParserState.Sel_ShouldBeRangeEnd;
+          } else if (isRangeOperator(token)) {
+            state = _ParserState.Sel_ShouldBeRangeStart;
+          } else if (!isNum(token)) {
+            // we're out of the selectory frying pan and into the fire!
+          }
+          break;
+        }
+        case _ParserState.Sel_ShouldBeRangeEnd: {
+          if (!isNum(token)) throw BCLParseError('Expected another ID');
+          state = _ParserState.Sel_RangeEnd;
+          break;
+        }
+        case _ParserState.Sel_RangeEnd: {
+          if (isRangeModifier(token)) {
+            throw BCLParseError("Can't have 'thru' here!");
+          } else if (isRangeOperator(token)) {
+            state = _ParserState.Sel_ShouldBeRangeStart;
+          } else if (!isNum(token)) {
+            // once again, out of the range and into the meaty bit!!
+          }
         }
       }
-    }
-    if (current.isEmpty) return;
-    if (isProc(current.first)) {
-      if (current.length >= 2) {
-        if (isNum(current[1])) {
-          current.insert(1, defaultObjectType());
-        }
-      }
-    } else if (isObject(current.first)) {
-
-    } else {
-      // error!
     }
   }
 }
