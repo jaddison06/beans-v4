@@ -70,11 +70,31 @@ def func_typedefs(funcs: list[CodegenFunction], getName: Callable[[CodegenFuncti
 
     return out
 
-def func_class_private_refs(funcs: list[CodegenFunction], getName: Callable[[CodegenFunction], str]) -> str:
-    out = ""
+def func_class_init_ref(file: ParsedGenFile, func: CodegenFunction, getName: Callable[[CodegenFunction, bool], str]) -> str:
+    leaf = 'true'
+    if has_annotation(func.annotations, 'Leaf'):
+        leaf = get_annotation(func.annotations, 'Leaf').args[0]
+
+    return f"_{file.libname()}.lookupFunction<{getName(func, True)}, {getName(func, False)}>('{func.name}', isLeaf: {leaf})"
+
+def func_class_private_refs(file: ParsedGenFile, funcs: list[CodegenFunction], getName: Callable[[CodegenFunction, bool], str]) -> str:
+    out = ''
 
     for func in funcs:
-        out += f"    static {getName(func)}? _{func.name};\n"
+        # motivation behind making it static:
+        # static:
+        #   - pros:
+        #       - only looked up / stored once
+        #   - cons:
+        #       - Dart lazily initializes - time overhead when first called
+        # stored per-instance (probably via constructor):
+        #   - pros:
+        #       - initialized immediately so always available
+        #   - cons:
+        #       - storing lots (i know they're just pointers but still. for the many not the few)
+        #       - lookup every time we construct is actually kinda expensive
+        #       - ESPECIALLY in case of secondary constructors eg fromPointer() - that should be incredibly lightweight, not have time cost!
+        out += f"    static final _{func.name} = {func_class_init_ref(file, func, getName)};\n"
     out += "\n"
 
     return out
@@ -105,45 +125,17 @@ def param_list(func: CodegenFunction) -> str:
     return out
 
 
-def func_class_get_library(file: ParsedGenFile) -> str:
+def get_library(file: ParsedGenFile) -> str:
     out = ""
 
-    out += f"            final lib = DynamicLibrary.open('build{path.sep}"
+    out += f"DynamicLibrary.open('build{path.sep}"
     # in the Dart string, if we're on Windows, we want to put "build\\whatever", or the slash will get interpreted
     # by Dart as an escape character
     if path.sep == "\\":
         out += "\\"
     out += file.libpath_no_ext().replace("\\", "\\\\")
     
-    out += f"{shared_library_extension()}');\n\n"
-
-    return out
-
-def func_class_init_refs(funcs: list[CodegenFunction], getName: Callable[[CodegenFunction, bool], str]) -> str:
-    out = ""
-
-    for func in funcs:
-        out += f"            _{func.name} = lib.lookupFunction<{getName(func, True)}, {getName(func, False)}>('{func.name}');\n"
-
-    return out
-
-def func_class_refs_initializer(file: ParsedGenFile, funcs: list[CodegenFunction], getName: Callable[[CodegenFunction, bool], str]) -> str:
-    out: str = ""
-
-    out += "    void _initRefs() {\n"
-    
-    out += "        if (\n"
-    for i, func in enumerate(funcs):
-        out += "            "
-        out += f"_{func.name} == null"
-        if i != len(funcs) - 1:
-            out += " ||"
-        out += "\n"
-    out += "        ) {\n"
-    out += func_class_get_library(file)
-    out += func_class_init_refs(funcs, getName)
-    out += "        }\n"
-    out += "    }\n\n"
+    out += f"{shared_library_extension()}')"
 
     return out
 
@@ -213,14 +205,9 @@ def funcs(file: ParsedGenFile) -> str:
     
     out += banner(file.libname())
 
-    out += f"class {file.libname()} {{\n\n"
-    out += func_class_private_refs(file.functions, lambda func: func_sig_name(file, func.name, False))
-    out += func_class_refs_initializer(file, file.functions, lambda func, is_native: func_sig_name(file, func.name, is_native))
+    out += f"class {file.libname()} {{\n"
+    out += func_class_private_refs(file, file.functions, lambda func, is_native: func_sig_name(file, func.name, is_native))
     
-    out += f"    {file.libname()}() {{\n"
-    out +=  "        _initRefs();\n"
-    out += "    }\n\n"
-
     for func in file.functions:
         out += f"    {func_class_func_return_type(func)} {func.display_name()}("
 
@@ -228,14 +215,13 @@ def funcs(file: ParsedGenFile) -> str:
 
         out +=  "        return "
         out += func_class_return_string(func,
-            f"_{func.name}!({func_params(func)})"
+            f"_{func.name}({func_params(func)})"
         )
         out += "    }\n\n"
     
     out += "}\n\n\n"
     
     return out
-
 
 
 def enums(file: ParsedGenFile) -> str:
@@ -281,23 +267,20 @@ def classes(file: ParsedGenFile) -> str:
         out +=  "        }\n"
         out +=  "    }\n\n"
 
-        out += func_class_private_refs(class_.methods, lambda method: method_sig_name(file, class_, method, False))
+        out += func_class_private_refs(file, class_.methods, lambda method, is_native: method_sig_name(file, class_, method, is_native))
 
-        out += func_class_refs_initializer(file, class_.methods,  lambda method, is_native: method_sig_name(file, class_, method, is_native))
+        # out += func_class_initializers(file, class_.methods,  lambda method, is_native: method_sig_name(file, class_, method, is_native))
 
         initializer = class_.initializer()
         out += f"    {class_.name}("
         out += param_list(initializer)
 
-        #! ALL CONSTRUCTORS MUST CALL _initRefs()
-        out +=  "        _initRefs();\n"
-        out += f"        structPointer = _{initializer.name}!("
+        out += f"        structPointer = _{initializer.name}("
         out += func_params(initializer)
         out += ");\n"
         out += "    }\n\n"
 
         out += f"    {class_.name}.fromPointer(Pointer<Void> ptr) {{\n"
-        out +=  "        _initRefs();\n"
         out +=  "        structPointer = ptr;\n"
         out +=  "    }\n\n"
 
@@ -341,7 +324,7 @@ def classes(file: ParsedGenFile) -> str:
                 out += param_list(method)
 
             out += f"        _validatePointer('{method.display_name()}');\n"
-            get_return_value = f"_{method.name}!(structPointer"
+            get_return_value = f"_{method.name}(structPointer"
             if len(method.params) > 0:
                 get_return_value += ", "
             get_return_value += func_params(method)
@@ -357,8 +340,6 @@ def classes(file: ParsedGenFile) -> str:
             out += "    }\n\n"
         
         out += "}\n\n"
-
-
 
 
     return out
@@ -381,6 +362,7 @@ import 'package:meta/meta.dart';
 
     for file in files:
         out += banner(f"file: {file.name}")
+        out += f'final _{file.libname()} = {get_library(file)};\n\n'
         out += funcs(file)
         out += enums(file)
         out += classes(file)

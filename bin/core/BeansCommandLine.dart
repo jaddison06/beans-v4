@@ -24,7 +24,8 @@ enum _SelectorState {
 enum _ParserState {
   Start,
   ProcDetected,
-  ObjectDetected
+  ObjectDetected,
+  ImplicitObject
 }
 
 class BCLParseError implements Exception {
@@ -152,7 +153,7 @@ class BeansCommandLine with CommandLineBase {
           } else if (isNum(token)) {
             // implicit object selection
             current.insert(0, defaultObjectType());
-            state = _ParserState.ObjectDetected;
+            state = _ParserState.ImplicitObject;
           } else {
             // todo: more helpful error message - can't have 'XXX' here - needs toString() from codegen
             // which in turn needs disallowing of unknown events in the first place
@@ -161,7 +162,7 @@ class BeansCommandLine with CommandLineBase {
           break;
         }
         case _ParserState.ObjectDetected: {
-          
+
         }
       }
     }

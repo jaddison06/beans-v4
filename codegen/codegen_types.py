@@ -134,7 +134,8 @@ SUPPORTED_ANNOTATIONS: dict[str, dict[str, int]] = {
         "Prefix": 1
     },
     "function": {
-        "Show": 1
+        "Show": 1,
+        "Leaf": 1
     },
     "method": {
         "Initializer": 0,
@@ -142,7 +143,8 @@ SUPPORTED_ANNOTATIONS: dict[str, dict[str, int]] = {
         "Show": 1,
         "Invalidates": 0,
         "SubscriptGet": 0,
-        "SubscriptSet": 0
+        "SubscriptSet": 0,
+        "Leaf": 1
     },
     "enum": {
 
