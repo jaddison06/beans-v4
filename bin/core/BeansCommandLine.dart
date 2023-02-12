@@ -3,6 +3,11 @@ import '../dart_codegen.dart';
 import '../objects.dart';
 import 'Engine.dart';
 
+class BCLParseError implements Exception {
+  final String message;
+  BCLParseError(this.message);
+}
+
 enum BCLTokenType {
   Key,
   Text
@@ -49,58 +54,11 @@ enum _ParserState {
   Sel_RangeEnd
 }
 
-class BCLParseError implements Exception {
-  final String message;
-  BCLParseError(this.message);
-}
-
 class BeansCommandLine with CommandLineBase {
   final Engine engine;
   BeansCommandLine(this.engine);
 
   List<BCLToken> current = [];
-
-  void processEvent(EventPoller event) {
-    switch (event.type) {
-      case EventType.Key: {
-        switch (event.key) {
-          case Key.Backspace: {
-            if (event.modifiers.shift) {
-              current.clear();
-            } else if (current.isNotEmpty) {
-              current.removeLast();
-            }
-            break;
-          }
-          case Key.Return: {
-            // execute();
-            break;
-          }
-          default: {
-            current.add(BCLToken(
-              BCLTokenType.Key,
-              event.key,
-              null,
-              event.modifiers
-            ));
-            parse();
-          }
-        }
-        break;
-      }
-      case EventType.Text: {
-        current.add(BCLToken(
-          BCLTokenType.Text,
-          null,
-          event.text,
-          event.modifiers
-        ));
-        parse();
-        break;
-      }
-      default: {}
-    }
-  }
 
   bool isNum(BCLToken tok) => tok.type == BCLTokenType.Text && const ['1', '2', '3', '4', '5', '6', '7', '8', '9'].contains(tok.text);
   bool isRangeModifier(BCLToken tok) => tok.type == BCLTokenType.Text && const ['t'].contains(tok.text);
@@ -179,6 +137,48 @@ class BeansCommandLine with CommandLineBase {
           }
         }
       }
+    }
+  }
+
+  void processEvent(EventPoller event) {
+    switch (event.type) {
+      case EventType.Key: {
+        switch (event.key) {
+          case Key.Backspace: {
+            if (event.modifiers.shift) {
+              current.clear();
+            } else if (current.isNotEmpty) {
+              current.removeLast();
+            }
+            break;
+          }
+          case Key.Return: {
+            // execute();
+            break;
+          }
+          default: {
+            current.add(BCLToken(
+              BCLTokenType.Key,
+              event.key,
+              null,
+              event.modifiers
+            ));
+            parse();
+          }
+        }
+        break;
+      }
+      case EventType.Text: {
+        current.add(BCLToken(
+          BCLTokenType.Text,
+          null,
+          event.text,
+          event.modifiers
+        ));
+        parse();
+        break;
+      }
+      default: {}
     }
   }
 }
