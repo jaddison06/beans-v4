@@ -6,9 +6,20 @@ class Modifiers {
   final bool control;
   final bool alt;
   final bool caps;
-  Modifiers({required this.shift, required this.control, required this.alt, required this.caps});
+  const Modifiers({required this.shift, required this.control, required this.alt, required this.caps});
 
   static Modifiers none() => Modifiers(shift: false, control: false, alt: false, caps: false);
+
+  @override
+  bool operator==(covariant Modifiers other) => (
+    shift == other.shift &&
+    control == other.control &&
+    alt == other.alt &&
+    caps == other.caps
+  );
+
+  @override
+  int get hashCode => Object.hash(shift, control, alt, caps);
 }
 
 abstract class EventPoller {

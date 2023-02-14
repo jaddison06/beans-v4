@@ -6,7 +6,9 @@ objects:
       mappedToUni: int
     methods:
       mapTo:
-        physicalUni: int
+        text: a
+        params:
+          physicalUni: int
 procedures:
   delete:
     key: Delete

@@ -1,5 +1,6 @@
 import '../ui/EventPoller.dart';
 import '../dart_codegen.dart';
+import 'BeansObject.dart';
 import '../objects.dart';
 import 'Engine.dart';
 
@@ -14,30 +15,53 @@ enum BCLTokenType {
 }
 
 class BCLToken {
-  BCLTokenType type;
-  Key? key;
-  String? text;
-  Modifiers modifiers;
-  BCLToken(this.type, this.key, this.text, this.modifiers);
+  final BCLTokenType type;
+  final Key? key;
+  final String? text;
+  final Modifiers modifiers;
+  const BCLToken(this.type, this.key, this.text, this.modifiers);
+
+  @override
+  bool operator==(covariant BCLToken other) => (
+    type == other.type &&
+    key == other.key &&
+    text == other.text &&
+    modifiers.control == other.modifiers.control &&
+    modifiers.alt == other.modifiers.alt
+  );
+
+  @override
+  int get hashCode => Object.hash(type, key, text, modifiers);
 }
 
-// range ::= num ('thru' num)
-// selector ::= range ('+' | '-' range)*
-
-// Either a range of values or just a single value
-class Range {
-  int start;
-  int? end;
-  RangeOperator? operator;
-  Range(this.start, this.end, [this.operator]);
+class BCLProc {
+  final String displayName;
+  const BCLProc(this.displayName);
 }
 
-enum RangeOperator {
-  Plus,
-  Minus
+enum BCLMethodParamType {
+  Int,
+  Object
 }
 
-typedef Selector = List<Range>;
+class BCLMethodParam {
+  BCLMethodParamType type;
+  BCLToken? object;
+  BCLMethodParam(this.type, [this.object]);
+}
+
+class BCLMethod {
+  final String displayName;
+  final List<BCLMethodParam> paramTypes;
+  const BCLMethod(this.displayName, this.paramTypes);
+}
+
+// uh oh!! this is where things start to get messy! don't forget to DECOUPLE!!!!!!!!!
+class BCLObj {
+  final String displayName;
+  final Map<BCLToken, BCLMethod> methods;
+  const BCLObj(this.displayName, this.methods);
+}
 
 /// - Start - haven't parsed anything yet
 /// - ProcDetected - found a procedure name, need either object type or selector (implicit object)
@@ -45,13 +69,19 @@ typedef Selector = List<Range>;
 /// - Sel_RangeStart - we're parsing the **start** value of a range
 /// - Sel_ShouldBeRangeEnd - we **should** be parsing the **end** value of a range
 /// - Sel_RangeEnd - we're parsing the **end** value of a range
+/// - PrimaryObjSelected - we've got a selector either for the first argument of our proc or for the object to operate on
+/// - ExpectMethodArg - we've successfully got an object method and are now in arguments - see supplementary state vars for more!
+/// - InArg - we're in the argument, need either numbers or a method separator
 enum _ParserState {
   Start,
   ProcDetected,
   Sel_ShouldBeRangeStart,
   Sel_RangeStart,
   Sel_ShouldBeRangeEnd,
-  Sel_RangeEnd
+  Sel_RangeEnd,
+  PrimaryObjSelected,
+  ExpectMethodArg,
+  InArg
 }
 
 class BeansCommandLine with CommandLineBase {
@@ -60,9 +90,12 @@ class BeansCommandLine with CommandLineBase {
 
   List<BCLToken> current = [];
 
-  bool isNum(BCLToken tok) => tok.type == BCLTokenType.Text && const ['1', '2', '3', '4', '5', '6', '7', '8', '9'].contains(tok.text);
-  bool isRangeModifier(BCLToken tok) => tok.type == BCLTokenType.Text && const ['t'].contains(tok.text);
-  bool isRangeOperator(BCLToken tok) => tok.type == BCLTokenType.Text && const ['=', '-'].contains(tok.text);
+  bool _matchText(List<String> text, BCLToken tok) => tok.type == BCLTokenType.Text && text.contains(tok.text);
+
+  bool isNum(BCLToken tok) => _matchText(const ['1', '2', '3', '4', '5', '6', '7', '8', '9'], tok);
+  bool isRangeModifier(BCLToken tok) => _matchText(const ['t'], tok);
+  bool isRangeOperator(BCLToken tok) => _matchText(const ['=', '-'], tok);
+  bool isArgSeparator(BCLToken tok) => _matchText(const [','], tok);
 
   // todo: temporary implementation
   BCLToken defaultObjectType() => BCLToken(
@@ -72,8 +105,14 @@ class BeansCommandLine with CommandLineBase {
     Modifiers.none()
   );
 
+  bool isProc(BCLToken tok) => procedures.containsKey(tok);
+  bool isObject(BCLToken tok) => objects.containsKey(tok);
+
   void parse() {
     var state = _ParserState.Start;
+    BCLMethod? method;
+    var methodParamIdx = 0;
+
     for (var i = 0; i < current.length; i++) {
       final token = current[i];
       switch (state) {
@@ -118,7 +157,7 @@ class BeansCommandLine with CommandLineBase {
           } else if (isRangeOperator(token)) {
             state = _ParserState.Sel_ShouldBeRangeStart;
           } else if (!isNum(token)) {
-            // we're out of the selectory frying pan and into the fire!
+            state = _ParserState.PrimaryObjSelected;
           }
           break;
         }
@@ -133,7 +172,53 @@ class BeansCommandLine with CommandLineBase {
           } else if (isRangeOperator(token)) {
             state = _ParserState.Sel_ShouldBeRangeStart;
           } else if (!isNum(token)) {
-            // once again, out of the range and into the meaty bit!!
+            state = _ParserState.PrimaryObjSelected;
+          }
+          break;
+        }
+        case _ParserState.PrimaryObjSelected: {
+          if (isProc(current[0])) {
+            // todo: secondary proc args?
+            throw BCLParseError('Only single-arg procs supported at the moment');
+          } else {
+            //? what the fuck
+            // if (current[0] == current[1])
+            method = objects[current[0]]!.methods[token];
+            if (method == null) {
+              throw BCLParseError('Unknown method!');
+            }
+            state = _ParserState.ExpectMethodArg;
+          }
+          break;
+        }
+        case _ParserState.ExpectMethodArg: {
+          switch (method!.paramTypes[methodParamIdx].type) {
+            case BCLMethodParamType.Object: {
+              if (isNum(token)) {
+                current.insert(i, method.paramTypes[methodParamIdx].object!);
+                i--;
+              } else if (token != method.paramTypes[methodParamIdx].object) {
+                throw BCLParseError('Wrong type for ${method.displayName}!');
+              }
+              break;
+            }
+            case BCLMethodParamType.Int: {
+              if (!isNum(token)) {
+                throw BCLParseError('Need a number!');
+              }
+            }
+          }
+          break;
+        }
+        case _ParserState.InArg: {
+          if (isArgSeparator(token)) {
+            methodParamIdx++;
+            if (methodParamIdx >= method!.paramTypes.length) {
+              throw BCLParseError('Too many parameters!');
+            }
+            state = _ParserState.ExpectMethodArg;
+          } else if (!isNum(token)) {
+            throw BCLParseError('Need a number!');
           }
         }
       }
