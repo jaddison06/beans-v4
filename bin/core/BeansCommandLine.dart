@@ -56,11 +56,26 @@ class BCLMethod {
   const BCLMethod(this.displayName, this.paramTypes);
 }
 
+class BCLSelection {
+  BCLObj obj;
+  Selector selector;
+  BCLSelection(this.obj, this.selector);
+}
+
 // uh oh!! this is where things start to get messy! don't forget to DECOUPLE!!!!!!!!!
 class BCLObj {
   final String displayName;
   final Map<BCLToken, BCLMethod> methods;
   const BCLObj(this.displayName, this.methods);
+}
+
+class BCLCommand {
+  BCLProc? proc;
+  BCLSelection? selection;
+  BCLMethod? method;
+  List<BCLSelection>? methodArgs;
+
+  var complete = false;
 }
 
 /// - Start - haven't parsed anything yet
@@ -108,23 +123,32 @@ class BeansCommandLine with CommandLineBase {
   bool isProc(BCLToken tok) => procedures.containsKey(tok);
   bool isObject(BCLToken tok) => objects.containsKey(tok);
 
-  void parse() {
+  BCLCommand parse() {
     var state = _ParserState.Start;
     BCLMethod? method;
     var methodParamIdx = 0;
+
+    final out = BCLCommand();
+
+    BCLProc? proc;
+    late BCLObj currentObj;
 
     for (var i = 0; i < current.length; i++) {
       final token = current[i];
       switch (state) {
         case _ParserState.Start: {
           if (isProc(token)) {
+            proc = procedures[token];
             state = _ParserState.ProcDetected;
           } else if (isObject(token)) {
+            currentObj = objects[token]!;
             state = _ParserState.Sel_ShouldBeRangeStart;
           } else if (isNum(token)) {
             // implicit object selection - insert the object & reverse
             current.insert(0, defaultObjectType());
-            i--;
+            // let's pretend we're at the start and the user keyed in the object - means we can keep all our
+            // object selection logic in one place
+            i -= 2;
             state = _ParserState.Sel_ShouldBeRangeStart;
           } else {
             // todo: more helpful error message - can't have 'XXX' here - needs toString() from codegen
@@ -137,8 +161,9 @@ class BeansCommandLine with CommandLineBase {
           // same object selection logic as detecting an object in _ParserState.Start
           if (isNum(token)) {
             current.insert(1, defaultObjectType());
-            i--;
+            i-= 2;
           } else if (isObject(token)) {
+            currentObj = objects[token]!;
             state = _ParserState.Sel_ShouldBeRangeStart;
           } else {
             throw BCLParseError('Expected an object or selector');
@@ -223,6 +248,7 @@ class BeansCommandLine with CommandLineBase {
         }
       }
     }
+    return out;
   }
 
   void processEvent(EventPoller event) {
